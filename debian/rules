@@ -11,6 +11,13 @@ USE_KLEIDIAI=OFF
 ifeq ($(DEB_HOST_ARCH),arm64)
 USE_KLEIDIAI=ON
 endif
+# the generic (non-x86/arm/wasm) transpose config assumes the target is
+# RISC-V when the vector extension is enabled and references RVV-only
+# symbols, which do not exist on loongarch64 - keep it off there
+RISCV_VECTOR=ON
+ifeq ($(DEB_HOST_ARCH),loong64)
+RISCV_VECTOR=OFF
+endif
 
 %:
 	dh $@ -Scmake+ninja
@@ -22,6 +29,7 @@ override_dh_auto_configure:
         -DXNNPACK_BUILD_TESTS=OFF \
         -DXNNPACK_BUILD_BENCHMARKS=OFF \
 	-DXNNPACK_ENABLE_KLEIDIAI=$(USE_KLEIDIAI) \
+	-DXNNPACK_ENABLE_RISCV_VECTOR=$(RISCV_VECTOR) \
         -DGOOGLETEST_SOURCE_DIR=/usr/src/googletest \
         -DPTHREADPOOL_SOURCE_DIR=/usr \
         -DCPUINFO_SOURCE_DIR=/usr
